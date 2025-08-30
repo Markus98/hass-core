@@ -66,6 +66,16 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         original_name = super().name
 
         if original_name not in (UNDEFINED, None) or meta.fallback_name is None:
+            # If a device has several repeated entities of the same type, add a
+            # counter suffix to the name.
+            entity_self = self.entity_data.entity
+            device_entities = entity_self.device.platform_entities.values()
+            entities_same_type = [
+                ent for ent in device_entities if type(ent) is type(entity_self)
+            ]
+            if len(entities_same_type) > 1 and entity_self in entities_same_type:
+                counter_num = entities_same_type.index(entity_self) + 1
+                return f"{original_name} {counter_num}"
             return original_name
 
         # This is to allow local development and to register niche devices, since
